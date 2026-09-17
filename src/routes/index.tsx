@@ -253,7 +253,7 @@ function Bento() {
 
       <div className="grid gap-4 md:grid-cols-6">
         <div className="md:col-span-4">
-          <CourseCard course={courses[0]} />
+          <CourseCard course={courses[0]!} />
         </div>
 
         <div className="flex flex-col justify-between rounded-2xl bg-primary p-6 text-primary-foreground md:col-span-2">
@@ -270,10 +270,10 @@ function Bento() {
         </div>
 
         <div className="md:col-span-2">
-          <CourseCard course={courses[1]} />
+          <CourseCard course={courses[1]!} />
         </div>
         <div className="md:col-span-2">
-          <CourseCard course={courses[2]} />
+          <CourseCard course={courses[2]!} />
         </div>
 
         <div className="flex flex-col justify-between rounded-2xl border border-primary/60 bg-card p-6 md:col-span-2">
