@@ -45,9 +45,10 @@ function AuthPage() {
     e.preventDefault();
     setBusy(true);
     try {
+      const normalizedEmail = email.trim().toLowerCase();
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
-          email,
+          email: normalizedEmail,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/estudio`,
@@ -57,11 +58,22 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Conta criada! Confirme o e-mail que enviamos para entrar.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password,
+        });
         if (error) throw error;
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não consegui completar agora.");
+      const message = error instanceof Error ? error.message : "";
+      const friendlyMessage = message.toLowerCase().includes("already registered")
+        ? "Este e-mail já possui uma conta. Entre ou use outro e-mail."
+        : message.toLowerCase().includes("rate limit")
+          ? "Muitas tentativas. Aguarde alguns minutos e tente novamente."
+          : message.toLowerCase().includes("sending confirmation")
+            ? "A conta pode ter sido criada, mas o Supabase não conseguiu enviar o e-mail de confirmação. Verifique o SMTP e tente novamente."
+            : message || "Não consegui completar agora.";
+      toast.error(friendlyMessage);
     } finally {
       setBusy(false);
     }
