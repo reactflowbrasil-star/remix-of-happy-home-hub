@@ -8,6 +8,8 @@ const VIDEO_COST = 5;
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const GEMINI_API = "https://generativelanguage.googleapis.com/v1beta";
 const IMAGE_MODEL = "gemini-3.1-flash-image";
+const HF_IMAGE_API =
+  "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell";
 const VIDEO_MODEL = "google/gemini-omni-1.1-flash";
 
 function apiKey() {
@@ -19,6 +21,12 @@ function apiKey() {
 function geminiKey() {
   const key = process.env["GEMINI_API_KEY"];
   if (!key) throw new Error("Configure GEMINI_API_KEY para gerar imagens.");
+  return key;
+}
+
+function hfKey() {
+  const key = process.env["HF_TOKEN"];
+  if (!key) throw new Error("Configure HF_TOKEN para gerar imagens.");
   return key;
 }
 
@@ -118,21 +126,12 @@ export const generateScenes = createServerFn({ method: "POST" })
       });
       if (spendError) throw new Error("Créditos insuficientes. Escolha um plano para continuar.");
 
-      const res = await fetch(`${GEMINI_API}/models/${IMAGE_MODEL}:generateContent`, {
+      const res = await fetch(HF_IMAGE_API, {
         method: "POST",
-        headers: { "x-goog-api-key": geminiKey(), "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${hfKey()}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: scenePrompt(data.scenario, data.extra) },
-                { inlineData: { mimeType: product.mime, data: product.dataUrl.split(",", 2)[1] } },
-                { inlineData: { mimeType: person.mime, data: person.dataUrl.split(",", 2)[1] } },
-              ],
-            },
-          ],
-          generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+          inputs: scenePrompt(data.scenario, data.extra),
+          parameters: { width: 768, height: 1360, num_inference_steps: 4 },
         }),
       });
 
@@ -141,26 +140,12 @@ export const generateScenes = createServerFn({ method: "POST" })
         throw new Error(await gatewayError(res));
       }
 
-      const json = (await res.json()) as {
-        candidates?: {
-          content?: { parts?: { inlineData?: { data?: string; mimeType?: string } }[] };
-        }[];
-      };
-      const image = json.candidates?.[0]?.content?.parts?.find(
-        (part) => part.inlineData?.data,
-      )?.inlineData;
-      if (!image?.data)
-        throw new Error("O Gemini não devolveu uma imagem. Verifique a cota da API.");
-
-      const b64 = image.data;
-      const binary = atob(b64);
-      const bytes = new Uint8Array(binary.length);
-      for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+      const bytes = new Uint8Array(await res.arrayBuffer());
 
       const path = `${userId}/${crypto.randomUUID()}.png`;
       const { error: upErr } = await db.storage
         .from("scenes")
-        .upload(path, bytes, { contentType: image.mimeType ?? "image/png" });
+        .upload(path, bytes, { contentType: "image/jpeg" });
       if (upErr) throw new Error("Não consegui salvar a cena gerada.");
 
       const { data: row, error: insErr } = await db
