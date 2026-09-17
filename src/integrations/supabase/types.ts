@@ -14,13 +14,253 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      gallery_models: {
+        Row: {
+          active: boolean
+          description: string | null
+          gender: string
+          id: string
+          image_url: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          description?: string | null
+          gender: string
+          id?: string
+          image_url: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          description?: string | null
+          gender?: string
+          id?: string
+          image_url?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      plans: {
+        Row: {
+          features: Json
+          highlight: boolean
+          id: string
+          monthly_credits: number
+          name: string
+          price_cents: number
+          sort_order: number
+        }
+        Insert: {
+          features?: Json
+          highlight?: boolean
+          id: string
+          monthly_credits: number
+          name: string
+          price_cents: number
+          sort_order?: number
+        }
+        Update: {
+          features?: Json
+          highlight?: boolean
+          id?: string
+          monthly_credits?: number
+          name?: string
+          price_cents?: number
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string
+          id: string
+          product_path: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_path: string
+          title?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_path?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scenes: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          image_path: string | null
+          model_id: string | null
+          project_id: string | null
+          prompt: string | null
+          scenario: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          image_path?: string | null
+          model_id?: string | null
+          project_id?: string | null
+          prompt?: string | null
+          scenario?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          image_path?: string | null
+          model_id?: string | null
+          project_id?: string | null
+          prompt?: string | null
+          scenario?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenes_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scenes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          credits: number
+          plan_id: string
+          renews_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits?: number
+          plan_id: string
+          renews_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          plan_id?: string
+          renews_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      videos: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          job_id: string | null
+          scene_id: string
+          status: string
+          user_id: string
+          video_path: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          job_id?: string | null
+          scene_id: string
+          status?: string
+          user_id: string
+          video_path?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          job_id?: string | null
+          scene_id?: string
+          status?: string
+          user_id?: string
+          video_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_scene_id_fkey"
+            columns: ["scene_id"]
+            isOneToOne: false
+            referencedRelation: "scenes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      spend_credits: {
+        Args: { _amount: number; _user_id: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
