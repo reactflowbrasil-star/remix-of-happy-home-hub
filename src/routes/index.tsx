@@ -58,7 +58,7 @@ function Home() {
             </a>
           </nav>
           <Link
-            to="/auth"
+            to="/estudio"
             className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
           >
             Entrar no estúdio
@@ -91,7 +91,7 @@ function Home() {
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link
-                  to="/auth"
+                  to="/estudio"
                   className="ember-glow inline-flex items-center gap-2 rounded-lg bg-primary px-7 py-3.5 font-bold text-primary-foreground"
                 >
                   Criar minha primeira cena <ArrowRight className="h-4 w-4" />
@@ -180,7 +180,7 @@ function Home() {
               publicar com mais velocidade.
             </p>
             <Link
-              to="/auth"
+              to="/estudio"
               className="ember-glow mt-9 inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-4 text-lg font-bold text-primary-foreground"
             >
               Entrar no Cenaria <ArrowRight className="h-5 w-5" />
