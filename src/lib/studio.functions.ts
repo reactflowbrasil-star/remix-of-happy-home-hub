@@ -6,12 +6,19 @@ const SCENE_COST = 1;
 const VIDEO_COST = 5;
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
-const IMAGE_MODEL = "google/gemini-3.1-flash-image";
+const GEMINI_API = "https://generativelanguage.googleapis.com/v1beta";
+const IMAGE_MODEL = "gemini-3.1-flash-image";
 const VIDEO_MODEL = "google/gemini-omni-1.1-flash";
 
 function apiKey() {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("Configuração de IA ausente.");
+  return key;
+}
+
+function geminiKey() {
+  const key = process.env["GEMINI_API_KEY"];
+  if (!key) throw new Error("Configure GEMINI_API_KEY para gerar imagens.");
   return key;
 }
 
@@ -111,43 +118,41 @@ export const generateScenes = createServerFn({ method: "POST" })
       });
       if (spendError) throw new Error("Créditos insuficientes. Escolha um plano para continuar.");
 
-      const res = await fetch(`${GATEWAY}/chat/completions`, {
+      const res = await fetch(`${GEMINI_API}/models/${IMAGE_MODEL}:generateContent`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey()}`,
-          "Content-Type": "application/json",
-        },
+        headers: { "x-goog-api-key": geminiKey(), "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: IMAGE_MODEL,
-          modalities: ["image", "text"],
-          messages: [
+          contents: [
             {
               role: "user",
-              content: [
-                { type: "text", text: scenePrompt(data.scenario, data.extra) },
-                { type: "image_url", image_url: { url: product.dataUrl } },
-                { type: "image_url", image_url: { url: person.dataUrl } },
+              parts: [
+                { text: scenePrompt(data.scenario, data.extra) },
+                { inlineData: { mimeType: product.mime, data: product.dataUrl.split(",", 2)[1] } },
+                { inlineData: { mimeType: person.mime, data: person.dataUrl.split(",", 2)[1] } },
               ],
             },
           ],
+          generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
         }),
       });
 
       if (!res.ok) {
-        await db
-          .from("subscriptions")
-          .update({ credits: sub.credits })
-          .eq("user_id", userId);
+        await db.from("subscriptions").update({ credits: sub.credits }).eq("user_id", userId);
         throw new Error(await gatewayError(res));
       }
 
       const json = (await res.json()) as {
-        choices?: { message?: { images?: { image_url?: { url?: string } }[] } }[];
+        candidates?: {
+          content?: { parts?: { inlineData?: { data?: string; mimeType?: string } }[] };
+        }[];
       };
-      const url = json.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-      if (!url) throw new Error("A IA não devolveu uma imagem. Tente novamente.");
+      const image = json.candidates?.[0]?.content?.parts?.find(
+        (part) => part.inlineData?.data,
+      )?.inlineData;
+      if (!image?.data)
+        throw new Error("O Gemini não devolveu uma imagem. Verifique a cota da API.");
 
-      const b64 = url.split(",", 2)[1] ?? "";
+      const b64 = image.data;
       const binary = atob(b64);
       const bytes = new Uint8Array(binary.length);
       for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
@@ -155,7 +160,7 @@ export const generateScenes = createServerFn({ method: "POST" })
       const path = `${userId}/${crypto.randomUUID()}.png`;
       const { error: upErr } = await db.storage
         .from("scenes")
-        .upload(path, bytes, { contentType: "image/png" });
+        .upload(path, bytes, { contentType: image.mimeType ?? "image/png" });
       if (upErr) throw new Error("Não consegui salvar a cena gerada.");
 
       const { data: row, error: insErr } = await db
@@ -221,7 +226,12 @@ export const startVideo = createServerFn({ method: "POST" })
           },
           { type: "image", data: base64, mime_type: frame.mime },
         ],
-        response_format: { type: "video", resolution: "720p", duration: "5s", aspect_ratio: "9:16" },
+        response_format: {
+          type: "video",
+          resolution: "720p",
+          duration: "5s",
+          aspect_ratio: "9:16",
+        },
       }),
     });
 
