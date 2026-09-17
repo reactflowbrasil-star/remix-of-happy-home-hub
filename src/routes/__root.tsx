@@ -77,17 +77,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Viraliza — Escola de Criadores de TikTok" },
+      { title: "Cenaria Studio — Cenas de produto com IA" },
       {
         name: "description",
         content:
-          "Cursos práticos para criadores de TikTok: crescimento, edição e monetização.",
+          "Transforme a foto do seu produto em cenas verticais 9:16 e vídeos prontos para publicar, com IA e pessoas reais.",
       },
-      { property: "og:title", content: "Viraliza — Escola de Criadores de TikTok" },
+      { property: "og:title", content: "Cenaria Studio — Cenas de produto com IA" },
       {
         property: "og:description",
         content:
-          "Cursos práticos para criadores de TikTok: crescimento, edição e monetização.",
+          "Transforme a foto do seu produto em cenas verticais 9:16 e vídeos prontos para publicar, com IA e pessoas reais.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -118,7 +118,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
